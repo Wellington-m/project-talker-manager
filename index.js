@@ -37,6 +37,25 @@ app.get('/talker/:id', async (req, res) => {
   res.status(200).json(selectedTalker);
 });
 
+app.post('/login', (req, res) => {
+  const TOKEN_LENGTH = 16;
+
+  const generateRandomToken = (num) => {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let token = '';
+    const charactersLength = characters.length;
+    for (let i = 0; i < num; i += 1) {
+      token += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+
+    return token;
+  };
+
+  const randomToken = generateRandomToken(TOKEN_LENGTH);
+  
+  res.status(200).json({ token: `${randomToken}` });
+});
+
 app.listen(PORT, () => {
   console.log('Online');
 });
