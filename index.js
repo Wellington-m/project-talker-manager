@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs').promises;
+const joi = require('joi');
 
 const app = express();
 app.use(bodyParser.json());
@@ -19,10 +20,17 @@ const generateRandomToken = (num) => {
   return token;
 };
 
-const validateEmail = (email) => {
-  const re = /\S+@\S+\.\S+/;
-  return re.test(email);
-};
+// const validateEmail = (email) => {
+//   const re = /\S+@\S+\.\S+/;
+//   return re.test(email);
+// };
+
+const schemaUser = joi.object({
+  email: joi.string().email().required().message({
+    'string.empty': 'O campo email é obrigatório',
+  }),
+  password: joi.string().min(6),
+});
 
 // não remova esse endpoint, e para o avaliador funcionar
 app.get('/', (_request, response) => {
@@ -55,19 +63,21 @@ app.get('/talker/:id', async (req, res) => {
 
 app.post('/login', (req, res) => {
   const TOKEN_LENGTH = 16;
-  const EMAIL_NULL_MESSAGE = 'O campo "email" é obrigatório';
-  const INVALID_EMAIL_MESSAGE = 'O "email" deve ter o formato "email@email.com"';
-  const PASSWORD_NULL_MESSAGE = 'O campo "password" é obrigatório';
-  const PASSWORD_LENGTH_MESSAGE = 'O "password" deve ter pelo menos 6 caracteres';
+  // const EMAIL_NULL_MESSAGE = 'O campo "email" é obrigatório';
+  // const INVALID_EMAIL_MESSAGE = 'O "email" deve ter o formato "email@email.com"';
+  // const PASSWORD_NULL_MESSAGE = 'O campo "password" é obrigatório';
+  // const PASSWORD_LENGTH_MESSAGE = 'O "password" deve ter pelo menos 6 caracteres';
+  // const { email, password } = req.body;
 
-  const { email, password } = req.body;
+  const { error } = schemaUser.validate(req.body);
+  console.log(error);
 
   const randomToken = generateRandomToken(TOKEN_LENGTH);
 
-  if (!email) return res.status(400).json({ message: EMAIL_NULL_MESSAGE });
-  if (!validateEmail(email)) return res.status(400).json({ message: INVALID_EMAIL_MESSAGE });
-  if (!password) return res.status(400).json({ message: PASSWORD_NULL_MESSAGE });
-  if (password.length < 6) return res.status(400).json({ message: PASSWORD_LENGTH_MESSAGE });
+  // if (!email) return res.status(400).json({ message: EMAIL_NULL_MESSAGE });
+  // if (!validateEmail(email)) return res.status(400).json({ message: INVALID_EMAIL_MESSAGE });
+  // if (!password) return res.status(400).json({ message: PASSWORD_NULL_MESSAGE });
+  // if (password.length < 6) return res.status(400).json({ message: PASSWORD_LENGTH_MESSAGE });
   
   res.status(200).json({ token: `${randomToken}` });
 });
