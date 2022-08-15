@@ -18,10 +18,9 @@ const schemaTalker = Joi.object({
     'number.min': 'A pessoa palestrante deve ser maior de idade',
   }),
   talk: Joi.object().keys({
-    watchedAt: Joi.date().required().format('DD/MM/YYYY').messages({
+    watchedAt: Joi.required().messages({
       'any.required': 'O campo "watchedAt" é obrigatório',
-      'date.empty': 'O campo "watchedAt" é obrigatório',
-      'date.format': 'O campo "watchedAt" é obrigatório',
+      'date.base': 'O campo "watchedAt" é obrigatório',
     }),
     rate: Joi.number().strict().min(1).max(5)
     .required()
@@ -57,6 +56,8 @@ const talkerValidation = (req, res, next) => {
   const informations = { authorization, name, age, talk };
 
   const { error } = schemaTalker.validate(informations);
+
+  console.log(error);
 
   const stausCode = () => {
     if (error.details[0].path[0] === 'authorization') {
