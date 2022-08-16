@@ -66,7 +66,7 @@ const talkerValidation = (req, res, next) => {
 
   if (error) return res.status(stausCode(error)).json({ message: error.details[0].message });
   if (talk.watchedAt) {
-    const result = moment(talk.watchedAt, 'MM/DD/YYYY', true).isValid();
+    const result = moment(talk.watchedAt, 'DD/MM/YYYY', true).isValid();
     if (!result) {
       return res.status(400)
       .json({ message: 'O campo "watchedAt" deve ter o formato "dd/mm/aaaa"' });

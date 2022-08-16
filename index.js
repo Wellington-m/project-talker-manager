@@ -61,8 +61,15 @@ app.post('/login', (req, res) => {
 
 app.use(validations.talkerValidation);
 
-app.post('/talker', (_req, res) => {
-  res.status(201).json({ message: 'Sucesso' });
+app.post('/talker', async (req, res) => {
+  const { name, age, talk } = req.body;
+  const fileContent = await fs.readFile('./talker.json', 'utf-8');
+  const talkers = JSON.parse(fileContent); 
+
+  const informations = { id: talkers.length + 1, name, age, talk };
+  talkers.push(informations);
+  await fs.writeFile('./talker.json', JSON.stringify(talkers));
+  res.status(201).json({ ...informations });
 });
 
 app.listen(PORT, () => {
