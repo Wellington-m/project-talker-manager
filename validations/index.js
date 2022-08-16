@@ -1,12 +1,15 @@
 const Joi = require('joi').extend(require('@joi/date'));
 const moment = require('moment');
 
-const schemaTalker = Joi.object({ 
+const schemaToken = Joi.object({
   authorization: Joi.string().min(16).required().messages({
     'any.required': 'Token não encontrado',
     'string.empty': 'Token não encontrado',
     'string.min': 'Token inválido',
   }),
+});
+
+const schemaTalker = Joi.object({ 
   name: Joi.string().min(3).required().messages({
     'any.required': 'O campo "name" é obrigatório',
     'string.empty': 'O campo "name" é obrigatório',
@@ -51,20 +54,29 @@ const validateEmail = (email) => {
   return re.test(email);
 };
 
-const stausCode = (error) => {
-  if (error.details[0].path[0] === 'authorization') {
-    return 401;
-  }
-  return 400;
+// const stausCode = (error) => {
+//   if (error.details[0].path[0] === 'authorization') {
+//     return 401;
+//   }
+//   return 400;
+// };
+
+const tokenValidation = (req, res, next) => {
+  const { authorization } = req.headers;
+  const informations = { authorization };
+  const { error } = schemaToken.validate(informations);
+
+  if (error) return res.status(401).json({ message: error.details[0].message });
+
+  next();
 };
 
 const talkerValidation = (req, res, next) => {
-  const { authorization } = req.headers;
   const { name, age, talk } = req.body;
-  const informations = { authorization, name, age, talk };
+  const informations = { name, age, talk };
   const { error } = schemaTalker.validate(informations);
 
-  if (error) return res.status(stausCode(error)).json({ message: error.details[0].message });
+  if (error) return res.status(400).json({ message: error.details[0].message });
   if (talk.watchedAt) {
     const result = moment(talk.watchedAt, 'DD/MM/YYYY', true).isValid();
     if (!result) {
@@ -79,4 +91,5 @@ module.exports = {
   generateRandomToken,
   validateEmail,
   talkerValidation,
+  tokenValidation,
 };

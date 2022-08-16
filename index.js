@@ -60,6 +60,17 @@ app.post('/login', (req, res) => {
   res.status(200).json({ token: `${randomToken}` });
 });
 
+app.use(validations.tokenValidation);
+
+app.delete('/talker/:id', async (req, res) => {
+  const { id } = req.params;
+  const fileContent = await fs.readFile(FILE_PATH, 'utf-8');
+  const talkers = JSON.parse(fileContent); 
+  const newTalkers = talkers.filter((talker) => talker.id !== Number(id));
+  await fs.writeFile('talker.json', JSON.stringify(newTalkers));
+  res.status(204).json({});
+});
+
 app.use(validations.talkerValidation);
 
 app.post('/talker', async (req, res) => {
