@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const fs = require('fs').promises;
 const validations = require('./validations/index');
+const getTalkers = require('./data/getTalkers');
 
 const app = express();
 app.use(bodyParser.json());
@@ -16,8 +17,7 @@ app.get('/', (_request, response) => {
 });
 
 app.get('/talker', async (_req, res) => {
-  const fileContent = await fs.readFile(FILE_PATH, 'utf-8');
-  const talkers = JSON.parse(fileContent);
+  const talkers = await getTalkers();
   
   if (!talkers) return res.status(200).json([]);
 
@@ -26,8 +26,7 @@ app.get('/talker', async (_req, res) => {
 
 app.get('/talker/search', validations.tokenValidation, async (req, res) => {
   const { q } = req.query;
-  const fileContent = await fs.readFile(FILE_PATH, 'utf-8');
-  const talkers = JSON.parse(fileContent);
+  const talkers = await getTalkers();
 
   if (!q) return res.status(200).json(talkers);
 
@@ -36,8 +35,7 @@ app.get('/talker/search', validations.tokenValidation, async (req, res) => {
 });
 
 app.get('/talker/:id', async (req, res) => {
-  const fileContent = await fs.readFile(FILE_PATH, 'utf-8');
-  const talkers = JSON.parse(fileContent);
+  const talkers = await getTalkers();
 
   const { id } = req.params;
 
@@ -75,8 +73,7 @@ app.use(validations.tokenValidation);
 
 app.delete('/talker/:id', async (req, res) => {
   const { id } = req.params;
-  const fileContent = await fs.readFile(FILE_PATH, 'utf-8');
-  const talkers = JSON.parse(fileContent); 
+  const talkers = await getTalkers();
   const newTalkers = talkers.filter((talker) => talker.id !== Number(id));
   await fs.writeFile('talker.json', JSON.stringify(newTalkers));
   res.status(204).json({});
@@ -86,8 +83,7 @@ app.use(validations.talkerValidation);
 
 app.post('/talker', async (req, res) => {
   const { name, age, talk } = req.body;
-  const fileContent = await fs.readFile(FILE_PATH, 'utf-8');
-  const talkers = JSON.parse(fileContent); 
+  const talkers = await getTalkers(); 
 
   const informations = { id: talkers.length + 1, name, age, talk };
   talkers.push(informations);
@@ -98,8 +94,7 @@ app.post('/talker', async (req, res) => {
 app.put('/talker/:id', async (req, res) => {
   const { name, age, talk } = req.body;
   const { id } = req.params;
-  const fileContent = await fs.readFile(FILE_PATH, 'utf-8');
-  const talkers = JSON.parse(fileContent); 
+  const talkers = await getTalkers();
 
   const newTalkers = talkers.reduce((acc, curr, index) => {
     if (curr.id === Number(id)) {
