@@ -8,6 +8,7 @@ app.use(bodyParser.json());
 
 const HTTP_OK_STATUS = 200;
 const PORT = '3000';
+const FILE_PATH = './talker.json';
 
 // não remova esse endpoint, e para o avaliador funcionar
 app.get('/', (_request, response) => {
@@ -15,7 +16,7 @@ app.get('/', (_request, response) => {
 });
 
 app.get('/talker', async (_req, res) => {
-  const fileContent = await fs.readFile('./talker.json', 'utf-8');
+  const fileContent = await fs.readFile(FILE_PATH, 'utf-8');
   const talkers = JSON.parse(fileContent);
   
   if (!talkers) return res.status(200).json([]);
@@ -24,7 +25,7 @@ app.get('/talker', async (_req, res) => {
 });
 
 app.get('/talker/:id', async (req, res) => {
-  const fileContent = await fs.readFile('./talker.json', 'utf-8');
+  const fileContent = await fs.readFile(FILE_PATH, 'utf-8');
   const talkers = JSON.parse(fileContent);
 
   const { id } = req.params;
@@ -63,13 +64,32 @@ app.use(validations.talkerValidation);
 
 app.post('/talker', async (req, res) => {
   const { name, age, talk } = req.body;
-  const fileContent = await fs.readFile('./talker.json', 'utf-8');
+  const fileContent = await fs.readFile(FILE_PATH, 'utf-8');
   const talkers = JSON.parse(fileContent); 
 
   const informations = { id: talkers.length + 1, name, age, talk };
   talkers.push(informations);
-  await fs.writeFile('./talker.json', JSON.stringify(talkers));
+  await fs.writeFile(FILE_PATH, JSON.stringify(talkers));
   res.status(201).json({ ...informations });
+});
+
+app.put('/talker/:id', async (req, res) => {
+  const { name, age, talk } = req.body;
+  const { id } = req.params;
+  const fileContent = await fs.readFile(FILE_PATH, 'utf-8');
+  const talkers = JSON.parse(fileContent); 
+
+  const newTalkers = talkers.reduce((acc, curr, index) => {
+    if (curr.id === Number(id)) {
+      acc[index] = { id: curr.id, name, age, talk };
+    } else {
+      acc.push(curr);
+    }
+    return acc;
+  }, []);
+
+  await fs.writeFile(FILE_PATH, JSON.stringify(newTalkers));
+  res.status(200).json({ id: Number(id), name, age, talk });
 });
 
 app.listen(PORT, () => {
