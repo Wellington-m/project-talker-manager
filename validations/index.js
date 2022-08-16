@@ -1,4 +1,5 @@
 const Joi = require('joi').extend(require('@joi/date'));
+const moment = require('moment');
 
 const schemaTalker = Joi.object({ 
   authorization: Joi.string().min(16).required().messages({
@@ -26,11 +27,11 @@ const schemaTalker = Joi.object({
     .required()
     .messages({
       'any.required': 'O campo "rate" é obrigatório',
+      'number.min': 'O campo "rate" deve ser um inteiro de 1 à 5',
+      'number.max': 'O campo "rate" deve ser um inteiro de 1 à 5',
     }),
   }).required().messages({
     'any.required': 'O campo "talk" é obrigatório',
-    'number.min': 'O campo "rate" deve ser um inteiro de 1 à 5',
-    'number.max': 'O campo "rate" deve ser um inteiro de 1 à 5',
   }),
 });
 
@@ -50,24 +51,27 @@ const validateEmail = (email) => {
   return re.test(email);
 };
 
+const stausCode = (error) => {
+  if (error.details[0].path[0] === 'authorization') {
+    return 401;
+  }
+  return 400;
+};
+
 const talkerValidation = (req, res, next) => {
   const { authorization } = req.headers;
   const { name, age, talk } = req.body;
   const informations = { authorization, name, age, talk };
-
   const { error } = schemaTalker.validate(informations);
 
-  console.log(error);
-
-  const stausCode = () => {
-    if (error.details[0].path[0] === 'authorization') {
-      return 401;
+  if (error) return res.status(stausCode(error)).json({ message: error.details[0].message });
+  if (talk.watchedAt) {
+    const result = moment(talk.watchedAt, 'MM/DD/YYYY', true).isValid();
+    if (!result) {
+      return res.status(400)
+      .json({ message: 'O campo "watchedAt" deve ter o formato "dd/mm/aaaa"' });
     }
-    return 400;
-  };
-
-  if (error) return res.status(stausCode()).json({ message: error.details[0].message });
-
+  }
   next();
 };
 
